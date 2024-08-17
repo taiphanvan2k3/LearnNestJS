@@ -1,27 +1,18 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
         {
             "type": "node",
             "request": "launch",
-            "name": "Launch NestJS Program",
-            "skipFiles": [
-                "<node_internals>/**"
+            "name": "Nest Debug",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": [
+              "run",
+              "start:debug"
             ],
-            "program": "${workspaceFolder}/dist/main.js",  // Points to the compiled output file
-            "preLaunchTask": "tsc: build - tsconfig.json", // Ensures TypeScript is compiled before launching
-            "outFiles": [
-                "${workspaceFolder}/dist/**/*.js" // Ensures that the debugger maps to the compiled JS files
-            ],
-            "sourceMaps": true, // Enables source maps for debugging TypeScript
-            "restart": true, // Automatically restarts debugging on changes
-            "console": "integratedTerminal", // Outputs logs to the integrated terminal
-            "env": {
-                "NODE_ENV": "development" // Sets the environment variable to development
-            }
+            "console": "integratedTerminal",
+            "restart": true,
+            "autoAttachChildProcesses": true
         }
     ]
 }
