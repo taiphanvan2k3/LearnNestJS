@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { Role } from "../common/enums/role.enum";
+import { Role } from "src/common/enums/role.enum";
 import { ResponseInfo } from "src/common/response-info";
 
 // Mặc định service này có scope là singleton, tức là mỗi request sẽ sử dụng chung một instance của service này
