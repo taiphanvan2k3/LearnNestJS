@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable } from "@nestjs/common";
 
 @Injectable()
 export class UsersService {
     getUsers(): string[] {
-        return ['user1', 'user2'];
+        return ["user1", "user2"];
     }
 }
