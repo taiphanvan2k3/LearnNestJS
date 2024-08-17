@@ -3,6 +3,7 @@ import {
     Controller,
     Delete,
     Get,
+    HttpStatus,
     Param,
     Patch,
     Post,
@@ -19,6 +20,9 @@ import {
 import { UsersService } from "./users.service";
 import { AnyFilesInterceptor } from "@nestjs/platform-express";
 
+import { Role } from "../common/enums/role.enum";
+import { ResponseInfo } from "src/common/response-info";
+
 @ApiTags("users")
 @Controller("users")
 export class UsersController {
@@ -26,11 +30,13 @@ export class UsersController {
 
     @Get() // GET /users?role=value
     @ApiOkResponse({ description: "Returns an array of users", type: [String] })
-    getUsers(@Query("role") role?: "INTERN" | "ENGINEER" | "ADMIN"): object {
-        return {
-            role,
-            users: this.userService.getUsers()
-        };
+    @ApiQuery({
+        name: "role",
+        enum: ["INTERN", "ENGINEER", "ADMIN"],
+        required: false
+    })
+    getUsers(@Query("role") role?: Role): object {
+        return this.userService.getUsers(role);
     }
 
     // Ta cần đặt đặt route /search trước route /:id vì nếu không, NestJS sẽ hiểu rằng route /search là một id
@@ -49,10 +55,8 @@ export class UsersController {
     }
 
     @Get(":id") // GET /users/:id
-    getUserById(@Param("id") id: number): object {
-        return {
-            userId: id
-        };
+    getUserById(@Param("id") id: string): object {
+        return this.userService.getUserById(+id);
     }
 
     @Post() // POST /users
@@ -64,17 +68,23 @@ export class UsersController {
                     type: "string",
                     example: "Phan Văn Tài"
                 },
-                age: {
-                    type: "number",
-                    example: 21
+                email: {
+                    type: "string",
+                    example: "abc@gmail.com"
+                },
+                role: {
+                    type: "string",
+                    enum: ["INTERN", "ENGINEER", "ADMIN"],
+                    example: "INTERN"
                 }
             }
         }
     })
-    create(@Body() user: { name: string; age: number }): object {
+    create(@Body() user: { name: string; email: string; role: Role }): object {
+        const createdUser = this.userService.create(user);
         return {
             version: "application/json",
-            user
+            user: createdUser
         };
     }
 
@@ -89,18 +99,25 @@ export class UsersController {
                     type: "string",
                     example: "Phan Văn Tài"
                 },
-                age: {
-                    type: "number",
-                    example: 21
+                email: {
+                    type: "string",
+                    example: "abc@gmail.com"
+                },
+                role: {
+                    type: "string",
+                    enum: ["INTERN", "ENGINEER", "ADMIN"],
+                    example: "INTERN"
                 }
             }
         }
     })
-    createByForm(@Body() user: { name: string; age: number }): object {
+    createByForm(
+        @Body() user: { name: string; email: string; role: Role }
+    ): object {
+        const createdUser = this.userService.create(user);
         return {
             version: "multipart/form-data",
-            note: "need to use @UseInterceptors(AnyFilesInterceptor()) for form-data",
-            user
+            user: createdUser
         };
     }
 
@@ -113,21 +130,41 @@ export class UsersController {
                     type: "string",
                     example: "Phan Văn Tài"
                 },
-                age: {
-                    type: "number",
-                    example: 21
+                email: {
+                    type: "string",
+                    example: "abc@gmail.com"
+                },
+                role: {
+                    type: "string",
+                    enum: ["INTERN", "ENGINEER", "ADMIN"],
+                    example: "INTERN"
                 }
             }
         }
     })
-    update(@Param("id") id: string, @Body() updatedUser: object) {
-        return { id, user: updatedUser };
+    update(
+        @Param("id") id: string,
+        @Body() updatedUser: { name?: string; email?: string; role?: Role }
+    ) {
+        let response: ResponseInfo = new ResponseInfo();
+        try {
+            response = this.userService.update(+id, updatedUser);
+        } catch (error) {
+            response.statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
+            response.message = error.message;
+        }
+        return response;
     }
 
     @Delete(":id")
     delete(@Param("id") id: string) {
-        return {
-            message: `User with id=${id} is deleted`
-        };
+        let response: ResponseInfo = new ResponseInfo();
+        try {
+            response = this.userService.delete(+id);
+        } catch (error) {
+            response.statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
+            response.message = error.message;
+        }
+        return response;
     }
 }
