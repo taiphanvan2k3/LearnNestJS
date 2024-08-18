@@ -7,15 +7,22 @@ import {
 
 @Catch(HttpException)
 export class HttpErrorFilter implements ExceptionFilter {
-    catch(exception: HttpException, host: ArgumentsHost) {
+    catch(exception: any, host: ArgumentsHost) {
         const ctx = host.switchToHttp();
         const response = ctx.getResponse();
-        const status = exception.getStatus();
+        const status =
+            exception instanceof HttpException ? exception.getStatus() : 500;
+
+        let message = (exception as any).message || "Internal server error";
+        if (exception instanceof HttpException) {
+            const response = exception.getResponse();
+            message = (response as any).message || exception.message;
+        }
 
         response.status(status).json({
             statusCode: status,
-            timestamp: new Date().toISOString(),
-            message: typeof response === "string" ? response : exception.message
+            statusText: exception.name,
+            message
         });
     }
 }
