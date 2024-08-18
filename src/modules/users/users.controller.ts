@@ -1,14 +1,19 @@
 import {
+    BadRequestException,
     Body,
     Controller,
     Delete,
     Get,
+    HttpException,
     HttpStatus,
+    NotFoundException,
     Param,
+    ParseIntPipe,
     Patch,
     Post,
     Query,
-    UseInterceptors
+    UseInterceptors,
+    ValidationPipe
 } from "@nestjs/common";
 import {
     ApiBody,
@@ -21,7 +26,8 @@ import { UsersService } from "./users.service";
 import { AnyFilesInterceptor } from "@nestjs/platform-express";
 
 import { Role } from "src/common/enums/role.enum";
-import { ResponseInfo } from "src/common/response-info";
+import { CreateUserDto } from "./dto/create-user.dto";
+import { UpdateUserDto } from "./dto/update-user.dto";
 
 @ApiTags("users")
 @Controller("users")
@@ -36,6 +42,9 @@ export class UsersController {
         required: false
     })
     getUsers(@Query("role") role?: Role): object {
+        if (role && role != "INTERN" && role != "ENGINEER" && role != "ADMIN") {
+            throw new BadRequestException("Invalid role");
+        }
         return this.userService.getUsers(role);
     }
 
@@ -55,8 +64,12 @@ export class UsersController {
     }
 
     @Get(":id") // GET /users/:id
-    getUserById(@Param("id") id: string): object {
-        return this.userService.getUserById(+id);
+    getUserById(@Param("id", ParseIntPipe) id: number): object {
+        const user = this.userService.getUserById(id);
+        if (!user) {
+            throw new NotFoundException("User not found");
+        }
+        return user;
     }
 
     @Post() // POST /users
@@ -80,8 +93,8 @@ export class UsersController {
             }
         }
     })
-    create(@Body() user: { name: string; email: string; role: Role }): object {
-        const createdUser = this.userService.create(user);
+    create(@Body(ValidationPipe) createUserDto: CreateUserDto): object {
+        const createdUser = this.userService.create(createUserDto);
         return {
             version: "application/json",
             user: createdUser
@@ -143,28 +156,49 @@ export class UsersController {
         }
     })
     update(
-        @Param("id") id: string,
-        @Body() updatedUser: { name?: string; email?: string; role?: Role }
+        @Param("id", ParseIntPipe) id: number,
+        @Body(ValidationPipe) updatedUserDto: UpdateUserDto
     ) {
-        let response: ResponseInfo = new ResponseInfo();
         try {
-            response = this.userService.update(+id, updatedUser);
+            let response = this.userService.update(id, updatedUserDto);
+            if (!response) {
+                throw new NotFoundException("User not found");
+            }
+            return response;
         } catch (error) {
-            response.statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
-            response.message = error.message;
+            if (error instanceof HttpException) {
+                throw error;
+            }
+            throw new HttpException(
+                {
+                    status: HttpStatus.INTERNAL_SERVER_ERROR,
+                    message: error.message
+                },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
-        return response;
     }
 
     @Delete(":id")
-    delete(@Param("id") id: string) {
-        let response: ResponseInfo = new ResponseInfo();
+    delete(@Param("id", ParseIntPipe) id: number) {
         try {
-            response = this.userService.delete(+id);
+            let response = this.userService.delete(id);
+            if (!response) {
+                throw new NotFoundException("User not found");
+            }
+
+            return response;
         } catch (error) {
-            response.statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
-            response.message = error.message;
+            if (error instanceof HttpException) {
+                throw error;
+            }
+            throw new HttpException(
+                {
+                    status: HttpStatus.INTERNAL_SERVER_ERROR,
+                    message: error.message
+                },
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
-        return response;
     }
 }

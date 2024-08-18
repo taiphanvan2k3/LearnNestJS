@@ -1,6 +1,8 @@
 import { Injectable } from "@nestjs/common";
 import { Role } from "src/common/enums/role.enum";
 import { ResponseInfo } from "src/common/response-info";
+import { CreateUserDto } from "./dto/create-user.dto";
+import { UpdateUserDto } from "./dto/update-user.dto";
 
 // Mặc định service này có scope là singleton, tức là mỗi request sẽ sử dụng chung một instance của service này
 @Injectable()
@@ -46,43 +48,40 @@ export class UsersService {
     }
 
     getUserById(id: number) {
-        return this.users.filter((user) => user.id == id);
+        const user = this.users.filter((user) => user.id == id)?.[0];
+        if (!user) {
+            return null;
+        }
+        return user;
     }
 
-    create(user: { name: string; email: string; role: Role }) {
+    create(createUserDto: CreateUserDto) {
         const maxUserId = [...this.users].sort((a, b) => b.id - a.id)[0].id;
         const newUser = {
             id: maxUserId + 1,
-            ...user
+            ...createUserDto
         };
         this.users.push(newUser);
         return newUser;
     }
 
-    update(
-        id: number,
-        updatedUser: {
-            name?: string;
-            email?: string;
-            role?: "INTERN" | "ENGINEER" | "ADMIN";
-        }
-    ) {
+    update(id: number, updateUserDto: UpdateUserDto) {
         const responseInfo = new ResponseInfo(200, "Ok", {});
         const userInDB = this.users.filter((user) => user.id === id)?.[0];
         if (!userInDB) {
-            return new ResponseInfo(404, "User not found");
+            return null;
         }
 
-        if (updatedUser.name) {
-            userInDB.name = updatedUser.name;
+        if (updateUserDto.name) {
+            userInDB.name = updateUserDto.name;
         }
 
-        if (updatedUser.email) {
-            userInDB.email = updatedUser.email;
+        if (updateUserDto.email) {
+            userInDB.email = updateUserDto.email;
         }
 
-        if (updatedUser.role) {
-            userInDB.role = updatedUser.role;
+        if (updateUserDto.role) {
+            userInDB.role = updateUserDto.role;
         }
 
         responseInfo.data.user = userInDB;
@@ -94,7 +93,7 @@ export class UsersService {
         const userIndex = this.users.findIndex((user) => user.id === id);
         const deletedUser = this.users[userIndex];
         if (userIndex === -1) {
-            return new ResponseInfo(404, "User not found");
+            return null;
         }
 
         this.users.splice(userIndex, 1);
