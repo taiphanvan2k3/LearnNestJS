@@ -29,7 +29,7 @@ import { Role } from "src/common/enums/role.enum";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 
-@ApiTags("users")
+@ApiTags("Users")
 @Controller("users")
 export class UsersController {
     constructor(private readonly userService: UsersService) {}
