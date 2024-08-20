@@ -13,7 +13,7 @@ export class HttpErrorFilter implements ExceptionFilter {
         const status =
             exception instanceof HttpException ? exception.getStatus() : 500;
 
-        let message = (exception as any).message || "Internal server error";
+        let message = exception.message || "Internal server error";
         if (exception instanceof HttpException) {
             const response = exception.getResponse();
             message = (response as any).message || exception.message;
