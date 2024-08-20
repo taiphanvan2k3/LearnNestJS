@@ -9,7 +9,6 @@ import {
     Query,
     ParseIntPipe,
     InternalServerErrorException,
-    HttpCode,
     NotFoundException,
     HttpException
 } from "@nestjs/common";
@@ -17,17 +16,26 @@ import { EmployeesService } from "./employees.service";
 import { Prisma } from "@prisma/client";
 import { Role } from "src/common/enums/role.enum";
 import { ApiTags } from "@nestjs/swagger";
+import { Throttle, SkipThrottle } from "@nestjs/throttler";
 
+// Việc SkipThrottle đặt ở controller sẽ bỏ qua việc giới hạn request tại controller này
+@SkipThrottle()
 @ApiTags("Employees")
 @Controller("employees")
 export class EmployeesController {
     constructor(private readonly employeeService: EmployeesService) {}
 
+    // route này không nên bỏ qua các giới hạn throttle. Nghĩa là, throttle mặc định sẽ vẫn được áp dụng.
+    // 2 configure về throttle tại App sẽ được áp dụng lên endpoint này
+    @SkipThrottle({ default: false })
     @Get()
     async findAll(@Query("role") role?: Role) {
         return await this.employeeService.findAll(role);
     }
 
+    // Nó sẽ ghi đè throttle có name là short, những vẫn giữ lại configure của throttle có name là long
+    // Nếu cấu hình forRoot của ta không có chỉ định tên như nào và ở đây ta muốn overwrite thì sử dụng default tại vị trí giống short
+    @Throttle({ short: { ttl: 1000, limit: 1 } })
     @Get(":id")
     async findOne(@Param("id", ParseIntPipe) id: number) {
         try {
