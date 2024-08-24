@@ -5,6 +5,7 @@ import {
     HttpException
 } from "@nestjs/common";
 
+// HttpErrorFilter này chỉ bắt lỗi từ HttpException
 @Catch(HttpException)
 export class HttpErrorFilter implements ExceptionFilter {
     catch(exception: any, host: ArgumentsHost) {

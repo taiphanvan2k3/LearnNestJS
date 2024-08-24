@@ -10,26 +10,34 @@ import {
     ParseIntPipe,
     InternalServerErrorException,
     NotFoundException,
-    HttpException
+    HttpException,
+    Ip,
+    BadRequestException
 } from "@nestjs/common";
 import { EmployeesService } from "./employees.service";
 import { Prisma } from "@prisma/client";
 import { Role } from "src/common/enums/role.enum";
 import { ApiTags } from "@nestjs/swagger";
 import { Throttle, SkipThrottle } from "@nestjs/throttler";
+import { MyLoggerService } from "../my-logger/my-logger.service";
 
 // Việc SkipThrottle đặt ở controller sẽ bỏ qua việc giới hạn request tại controller này
 @SkipThrottle()
 @ApiTags("Employees")
 @Controller("employees")
 export class EmployeesController {
+    private readonly logger = new MyLoggerService(EmployeesController.name);
     constructor(private readonly employeeService: EmployeesService) {}
 
     // route này không nên bỏ qua các giới hạn throttle. Nghĩa là, throttle mặc định sẽ vẫn được áp dụng.
     // 2 configure về throttle tại App sẽ được áp dụng lên endpoint này
     @SkipThrottle({ default: false })
     @Get()
-    async findAll(@Query("role") role?: Role) {
+    async findAll(@Ip() ip: string, @Query("role") role?: Role) {
+        this.logger.log(`Find all employees\t${ip}`);
+        if (role && role != "ADMIN" && role != "ENGINEER" && role != "INTERN") {
+            throw new BadRequestException("Invalid role");
+        }
         return await this.employeeService.findAll(role);
     }
 

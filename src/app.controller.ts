@@ -1,9 +1,10 @@
 import { Controller, Get } from "@nestjs/common";
 import { AppService } from "./app.service";
-import { ApiTags } from "@nestjs/swagger";
+import { ApiExcludeController } from "@nestjs/swagger";
 import { UsersService } from "./modules/users/users.service";
 
-@ApiTags("app")
+// Không muốn controller này show lên swagger
+@ApiExcludeController()
 @Controller()
 export class AppController {
     constructor(
