@@ -50,7 +50,12 @@ export class AllExceptionFilter extends BaseExceptionFilter {
         }
 
         response.status(responseData.statusCode).json(responseData);
-        this.logger.error(responseData.response, AllExceptionFilter.name);
+        this.logger.error(
+            typeof responseData.response === "string"
+                ? responseData.response
+                : (responseData.response as any).message,
+            AllExceptionFilter.name
+        );
         super.catch(exception, host);
     }
 }

@@ -1,7 +1,7 @@
-import { HttpAdapterHost, NestFactory } from "@nestjs/core";
+import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
-import { AllExceptionFilter } from "./filters/all-exceptions.filter";
+import { PrismaService } from "nestjs-prisma";
 
 async function bootstrap() {
     //#region Uncomment this block to enable the global logger
@@ -21,8 +21,15 @@ async function bootstrap() {
     app.enableCors();
     app.setGlobalPrefix("api");
 
-    const { httpAdapter } = app.get(HttpAdapterHost);
-    app.useGlobalFilters(new AllExceptionFilter(httpAdapter));
+    // Sử dụng cách thêm vào providers trong AppModule tiện hơn
+    // const { httpAdapter } = app.get(HttpAdapterHost);
+    // app.useGlobalFilters(new AllExceptionFilter(httpAdapter));
+
+    // Prisma logging middleware
+    const prismaService: PrismaService = app.get(PrismaService);
+    prismaService.$on("query", (event) => {
+        console.log(event);
+    });
 
     // Swagger configuration
     const config = new DocumentBuilder()
