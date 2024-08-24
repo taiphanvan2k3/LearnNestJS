@@ -1,7 +1,13 @@
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
-import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { PrismaService } from "nestjs-prisma";
+import { setupSwagger } from "./configs/swagger.config";
+import { INestApplication } from "@nestjs/common";
+
+async function configureApp(app: INestApplication) {
+    app.enableCors();
+    app.setGlobalPrefix("api");
+}
 
 async function bootstrap() {
     //#region Uncomment this block to enable the global logger
@@ -18,8 +24,7 @@ async function bootstrap() {
     //#endregion
 
     const app = await NestFactory.create(AppModule);
-    app.enableCors();
-    app.setGlobalPrefix("api");
+    configureApp(app);
 
     // Sử dụng cách thêm vào providers trong AppModule tiện hơn
     // const { httpAdapter } = app.get(HttpAdapterHost);
@@ -31,15 +36,7 @@ async function bootstrap() {
         console.log(event);
     });
 
-    // Swagger configuration
-    const config = new DocumentBuilder()
-        .setTitle("NestJS example")
-        .setDescription("The NestJS API description")
-        .setVersion("1.0")
-        .build();
-    const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup("/swagger", app, document);
-
+    setupSwagger(app);
     await app.listen(5001);
 }
 bootstrap();
