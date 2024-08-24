@@ -7,8 +7,8 @@ import { promises as fsPromises } from "fs";
 export class MyLoggerService extends ConsoleLogger {
     async logToFile(entry: string) {
         const formattedDate = Intl.DateTimeFormat("vi-VN", {
-            dateStyle: "short",
-            timeStyle: "short",
+            dateStyle: "medium",
+            timeStyle: "long",
             timeZone: "Asia/Ho_Chi_Minh"
         }).format(new Date());
         const formattedEntry = `${formattedDate}\t${entry}\n`;

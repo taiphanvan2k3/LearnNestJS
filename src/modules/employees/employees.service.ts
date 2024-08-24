@@ -1,14 +1,14 @@
 import { Injectable } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
+import { PrismaService } from "nestjs-prisma";
 import { Role } from "src/common/enums/role.enum";
-import { DatabaseService } from "src/database/database.service";
 
 @Injectable()
 export class EmployeesService {
-    constructor(private readonly databaseService: DatabaseService) {}
+    constructor(private readonly prisma: PrismaService) {}
 
     async findAll(role: Role) {
-        const employees = await this.databaseService.employee.findMany({
+        const employees = await this.prisma.employee.findMany({
             where: role ? { role } : {}
         });
         return employees;
@@ -16,13 +16,13 @@ export class EmployeesService {
 
     async findOne(id: number) {
         // nên dùng findUnique cho việc
-        return this.databaseService.employee.findUnique({
+        return this.prisma.employee.findUnique({
             where: { id }
         });
     }
 
     async create(createEmployeeDto: Prisma.EmployeeCreateInput) {
-        return this.databaseService.employee.create({
+        return this.prisma.employee.create({
             data: createEmployeeDto
         });
     }
@@ -34,7 +34,7 @@ export class EmployeesService {
         }
 
         // Không thể update trên đối tượng trả về mà cần gọi lại hàm update
-        return this.databaseService.employee.update({
+        return this.prisma.employee.update({
             where: { id },
             data: updateEmployeeDto
         });
@@ -46,7 +46,7 @@ export class EmployeesService {
             return null;
         }
 
-        return this.databaseService.employee.delete({
+        return this.prisma.employee.delete({
             where: { id }
         });
     }
